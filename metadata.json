@@ -1,0 +1,6 @@
+{
+  "name": "SENTINEL AI - Autonomous Security Systems",
+  "description": "Enterprise security systems built in days. AI-powered surveillance deployed with zero-trust architecture and smart access control.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

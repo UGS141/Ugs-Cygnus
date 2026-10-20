@@ -1,0 +1,71 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "email", "createdAt"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "User booking or reservation record for restaurants, local services, appointments, or product orders",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "businessId": { "type": "string" },
+        "businessName": { "type": "string" },
+        "category": { "type": "string" },
+        "serviceOrTable": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "partySize": { "type": "number" },
+        "status": { "type": "string", "enum": ["confirmed", "pending", "cancelled", "completed"] },
+        "price": { "type": "number" },
+        "reference": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "businessId", "businessName", "category", "status", "reference", "createdAt"]
+    },
+    "SavedItem": {
+      "title": "SavedItem",
+      "description": "User bookmarked product, restaurant, or service provider",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "itemId": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "location": { "type": "string" },
+        "rating": { "type": "number" },
+        "priceRange": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "itemId", "title", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Public user profile"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "User table reservations and appointment bookings"
+    },
+    "/savedItems/{savedId}": {
+      "schema": "SavedItem",
+      "description": "User bookmarked businesses, restaurants, and products"
+    }
+  }
+}

@@ -1,0 +1,141 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+:root {
+  --background: 232 40% 4%;
+  --foreground: 210 40% 98%;
+  --primary: 172 100% 48%; /* Vivid neon cyan/turquoise from UGS logo */
+  --primary-foreground: 232 40% 4%;
+  --secondary: 232 30% 12%;
+  --secondary-foreground: 210 40% 96%;
+  --muted: 232 25% 15%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 262 83% 58%; /* Violet accent from UGS logo */
+  --accent-foreground: 210 40% 98%;
+  --border: 232 25% 18%;
+  --input: 232 25% 18%;
+  --ring: 172 100% 48%;
+  --radius: 0.5rem;
+  --nav-button: 232 30% 12%;
+  --hero-bg: 232 45% 3%;
+  --ugs-violet: #8B5CF6;
+  --ugs-blue: #3B82F6;
+  --ugs-cyan: #00F5D4;
+}
+
+@theme {
+  --font-sora: "Sora", sans-serif;
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-hero-bg: hsl(var(--hero-bg));
+
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-fade-in: fade-in 0.5s ease-out forwards;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Gradient helpers for brand consistency */
+.ugs-gradient-text {
+  background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 45%, #2dd4bf 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ugs-gradient-border {
+  border-image: linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(59, 130, 246, 0.3), rgba(0, 245, 212, 0.5)) 1;
+}
+
+.ugs-gradient-bg {
+  background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #00F5D4 100%);
+}
+
+.ugs-card-glow {
+  box-shadow: 0 0 30px -10px rgba(59, 130, 246, 0.15);
+}
+
+.ugs-card-glow:hover {
+  box-shadow: 0 0 40px -5px rgba(0, 245, 212, 0.25);
+}
+
+/* Base Body Styles */
+body {
+  font-family: 'Sora', sans-serif;
+  background-color: #06070B;
+  color: #F8FAFC;
+  overflow-x: hidden;
+  selection-background-color: #00F5D4;
+  selection-color: #06070B;
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #06070B;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E2438;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3B82F6;
+}
