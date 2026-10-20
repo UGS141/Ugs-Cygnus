@@ -14,6 +14,9 @@ import {
   ShieldCheck,
   ChevronRight,
   Sparkles,
+  Copy,
+  Check,
+  Share2,
 } from "lucide-react";
 
 interface RestaurantReservationModalProps {
@@ -41,20 +44,23 @@ export const RestaurantReservationModal: React.FC<RestaurantReservationModalProp
   const [specialRequests, setSpecialRequests] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState<BookingRecord | null>(null);
+  const [copiedRef, setCopiedRef] = useState(false);
 
-  const availableSlots = restaurant.availableSlots || ["7:00 PM", "7:30 PM", "8:15 PM", "9:00 PM"];
+  const availableSlots = restaurant.availableSlots || ["7:00 PM", "7:30 PM", "8:15 PM", "9:00 PM", "9:45 PM"];
 
   const handleConfirmReservation = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || confirmedBooking) return;
     setIsSubmitting(true);
 
-    const bookingRef = `CYG-TBL-${Math.floor(100000 + Math.random() * 900000)}`;
+    const bookingRef = `CYG-TBL-${Date.now().toString().slice(-4)}${Math.floor(1000 + Math.random() * 9000)}`;
     const newBooking: BookingRecord = {
       id: bookingRef,
       userId: auth.currentUser?.uid || "guest_user",
       businessId: restaurant.id,
       businessName: restaurant.name,
       category: "restaurant",
+      actionType: "reserve_table",
       serviceOrTable: `Table for ${partySize} (${seatingPref})`,
       date,
       time: selectedSlot,
@@ -68,7 +74,7 @@ export const RestaurantReservationModal: React.FC<RestaurantReservationModalProp
       cancellationPolicy: "Free cancellation up to 2 hours before reservation time.",
     };
 
-    // Save to Firestore if user is logged in
+    // Save to Firestore if user is authenticated
     if (auth.currentUser) {
       try {
         await setDoc(doc(db, "bookings", bookingRef), newBooking);
@@ -82,26 +88,36 @@ export const RestaurantReservationModal: React.FC<RestaurantReservationModalProp
     onBookingSuccess(newBooking);
   };
 
+  const copyReference = () => {
+    if (confirmedBooking) {
+      navigator.clipboard?.writeText(confirmedBooking.reference);
+      setCopiedRef(true);
+      setTimeout(() => setCopiedRef(false), 2000);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-xl bg-[#0D1022] border border-[#222C4D] rounded-2xl shadow-2xl p-6 sm:p-8 text-foreground max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-xl bg-[#0B0F21] border border-[#212C4D] rounded-3xl shadow-2xl p-6 sm:p-8 text-foreground max-h-[92vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 text-slate-400 hover:text-white transition-colors p-1"
+          className="absolute top-5 right-5 text-slate-400 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10"
           aria-label="Close dialog"
         >
           <X className="w-5 h-5" />
         </button>
 
         {confirmedBooking ? (
-          <div className="text-center py-6 space-y-4 animate-fade-in">
-            <div className="w-16 h-16 rounded-full bg-[#00F5D4]/15 border border-[#00F5D4]/40 flex items-center justify-center mx-auto text-[#00F5D4]">
-              <CheckCircle2 className="w-8 h-8" />
+          <div className="text-center py-6 space-y-5 animate-fade-in">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#8B5CF6] via-[#3B82F6] to-[#00F5D4] p-[1.5px] mx-auto">
+              <div className="w-full h-full bg-[#080B1A] rounded-[14px] flex items-center justify-center text-[#00F5D4]">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
             </div>
 
             <div className="space-y-1">
-              <span className="text-xs uppercase tracking-widest text-[#00F5D4] font-mono">
-                {confirmedBooking.status === "confirmed" ? "Table Reservation Confirmed" : "Request Submitted"}
+              <span className="text-xs uppercase tracking-widest text-[#00F5D4] font-mono font-semibold">
+                {confirmedBooking.status === "confirmed" ? "Reservation Confirmed" : "Request Submitted"}
               </span>
               <h3 className="text-2xl font-bold text-white">{restaurant.name}</h3>
               <p className="text-xs text-slate-400">
@@ -109,11 +125,21 @@ export const RestaurantReservationModal: React.FC<RestaurantReservationModalProp
               </p>
             </div>
 
-            {/* Reservation Receipt Card */}
-            <div className="p-4 rounded-xl bg-[#11162B] border border-[#212C4E] text-left text-xs space-y-2 font-mono">
-              <div className="flex justify-between border-b border-[#1A233E] pb-2 text-slate-300">
+            {/* Reservation Receipt Pass */}
+            <div className="p-5 rounded-2xl bg-[#101528] border border-[#1F2948] text-left text-xs space-y-2.5 font-mono shadow-inner">
+              <div className="flex justify-between items-center border-b border-[#1A233E] pb-2.5 text-slate-300">
                 <span>Confirmation Ref:</span>
-                <span className="text-[#00F5D4] font-bold">{confirmedBooking.reference}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[#00F5D4] font-bold">{confirmedBooking.reference}</span>
+                  <button
+                    type="button"
+                    onClick={copyReference}
+                    className="p-1 hover:text-white text-slate-400 transition-colors"
+                    title="Copy Code"
+                  >
+                    {copiedRef ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
               <div className="flex justify-between text-slate-300">
                 <span>Date & Time:</span>
@@ -125,7 +151,7 @@ export const RestaurantReservationModal: React.FC<RestaurantReservationModalProp
               </div>
               <div className="flex justify-between text-slate-300">
                 <span>Verification Source:</span>
-                <span className="text-emerald-400">{restaurant.verifiedProvider || "Direct Verified"}</span>
+                <span className="text-emerald-400">{restaurant.verifiedProvider || "Google Maps Grounded API"}</span>
               </div>
               <div className="flex justify-between text-slate-400 pt-2 border-t border-[#1A233E]">
                 <span>Cancellation:</span>
@@ -134,189 +160,176 @@ export const RestaurantReservationModal: React.FC<RestaurantReservationModalProp
             </div>
 
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              A calendar invite and SMS confirmation have been synced to your activity ledger.
+              A confirmation pass has been synced to your activity ledger and your calendar.
             </p>
 
             <button
               type="button"
               onClick={onClose}
-              className="w-full py-3 rounded-lg text-xs font-semibold uppercase tracking-wider bg-gradient-to-r from-[#8B5CF6] via-[#3B82F6] to-[#00F5D4] text-[#06070B] hover:brightness-110 transition-all"
+              className="w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-wider bg-gradient-to-r from-[#8B5CF6] via-[#3B82F6] to-[#00F5D4] text-[#06070B] hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,245,212,0.3)]"
             >
-              Done & View in My Bookings
+              Done & View Activity Ledger
             </button>
           </div>
         ) : (
-          <form onSubmit={handleConfirmReservation} className="space-y-6">
+          <div className="space-y-6">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Utensils className="w-4 h-4 text-[#00F5D4]" />
-                <span className="text-xs uppercase tracking-widest text-[#00F5D4] font-semibold">
+                <span className="text-xs uppercase tracking-widest text-[#00F5D4] font-mono">
                   Table Reservation
                 </span>
-                <span className="text-slate-600">·</span>
-                <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  {restaurant.verifiedProvider || "Verified Booking"}
-                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               </div>
-              <h2 className="text-2xl font-bold tracking-tight text-white">{restaurant.name}</h2>
-              <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                <MapPin className="w-3.5 h-3.5 text-[#00F5D4]" />
+              <h3 className="text-2xl font-bold text-white tracking-tight">{restaurant.name}</h3>
+              <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-[#00F5D4] shrink-0" />
                 <span>{restaurant.address}</span>
               </p>
             </div>
 
-            {/* Date Selection */}
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1.5">
-                Select Date
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {["Tonight, Oct 20", "Tomorrow, Oct 21", "Wednesday, Oct 22"].map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setDate(d)}
-                    className={`py-2 px-3 rounded-lg text-xs font-medium border text-center transition-all ${
-                      date === d
-                        ? "bg-[#00F5D4]/15 border-[#00F5D4] text-[#00F5D4] font-semibold"
-                        : "bg-[#111526] border-[#222A44] text-slate-300 hover:text-white"
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Party Size */}
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1.5">
-                Party Size (Guests)
-              </label>
-              <div className="grid grid-cols-4 gap-2">
-                {[1, 2, 4, 6].map((num) => (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => setPartySize(num)}
-                    className={`py-2 rounded-lg text-xs font-medium border text-center transition-all ${
-                      partySize === num
-                        ? "bg-[#00F5D4] text-[#06070B] font-bold border-[#00F5D4]"
-                        : "bg-[#111526] border-[#222A44] text-slate-300 hover:text-white"
-                    }`}
-                  >
-                    {num} {num === 1 ? "Guest" : "Guests"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Available Verified Slots */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium uppercase tracking-wider text-slate-400">
-                  Verified Available Time Slots
+            <form onSubmit={handleConfirmReservation} className="space-y-5">
+              {/* Date Selection */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 font-mono">
+                  1. Select Date
                 </label>
-                <span className="text-[10px] text-emerald-400 font-mono">Live Provider Synced</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {["Tonight, Oct 20", "Tomorrow, Oct 21", "Wednesday, Oct 22"].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setDate(d)}
+                      className={`p-2.5 rounded-xl text-xs font-medium border text-center transition-all ${
+                        date === d
+                          ? "bg-[#00F5D4]/15 border-[#00F5D4] text-[#00F5D4] font-bold"
+                          : "bg-[#101528] border-[#1F2948] text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {availableSlots.map((slot) => (
-                  <button
-                    key={slot}
-                    type="button"
-                    onClick={() => setSelectedSlot(slot)}
-                    className={`py-2 px-2 rounded-lg text-xs font-mono font-medium border text-center transition-all ${
-                      selectedSlot === slot
-                        ? "bg-[#38BDF8] text-[#06070B] font-bold border-[#38BDF8] shadow-[0_0_12px_rgba(56,189,248,0.3)]"
-                        : "bg-[#111526] border-[#222A44] text-slate-300 hover:border-[#38BDF8]"
-                    }`}
-                  >
-                    {slot}
-                  </button>
-                ))}
-              </div>
-            </div>
 
-            {/* Seating Preference */}
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1.5">
-                Seating Area Preference
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {["Indoor Main Dining", "Outdoor Garden Terrace", "Chef's Counter"].map((area) => (
-                  <button
-                    key={area}
-                    type="button"
-                    onClick={() => setSeatingPref(area)}
-                    className={`p-2 rounded-lg text-xs font-medium border text-center transition-all ${
-                      seatingPref === area
-                        ? "bg-[#8B5CF6]/20 border-[#8B5CF6] text-white font-semibold"
-                        : "bg-[#111526] border-[#222A44] text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    {area}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Contact Details */}
-            <div className="grid sm:grid-cols-2 gap-3 pt-2">
+              {/* Party Size */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Guest Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={guestName}
-                  onChange={(e) => setGuestName(e.target.value)}
-                  placeholder="Rohan Sharma"
-                  className="w-full bg-[#111526] border border-[#222A44] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#00F5D4]"
-                />
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 font-mono">
+                  2. Party Size
+                </label>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 4, 6, 8].map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setPartySize(size)}
+                      className={`w-12 h-10 rounded-xl text-xs font-mono font-bold border transition-all ${
+                        partySize === size
+                          ? "bg-[#00F5D4] text-[#06070B] border-[#00F5D4] shadow-[0_0_10px_rgba(0,245,212,0.3)]"
+                          : "bg-[#101528] border-[#1F2948] text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {size}p
+                    </button>
+                  ))}
+                </div>
               </div>
 
+              {/* Time Slots */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Contact Phone *</label>
-                <input
-                  type="tel"
-                  required
-                  value={guestPhone}
-                  onChange={(e) => setGuestPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full bg-[#111526] border border-[#222A44] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#00F5D4]"
-                />
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 font-mono">
+                  3. Available Verified Time Slot
+                </label>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {availableSlots.map((slot) => (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => setSelectedSlot(slot)}
+                      className={`p-2.5 rounded-xl text-xs font-mono font-semibold border text-center transition-all ${
+                        selectedSlot === slot
+                          ? "bg-[#00F5D4] text-[#06070B] border-[#00F5D4] shadow-[0_0_12px_rgba(0,245,212,0.3)] font-bold"
+                          : "bg-[#101528] border-[#1F2948] text-slate-300 hover:text-white hover:border-slate-500"
+                      }`}
+                    >
+                      {slot}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Special Dietary / Occasion Notes */}
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
-                Dietary Requirements or Occasion (Optional)
-              </label>
-              <input
-                type="text"
-                value={specialRequests}
-                onChange={(e) => setSpecialRequests(e.target.value)}
-                placeholder="e.g. Vegetarian, Anniversary celebration, Quiet table"
-                className="w-full bg-[#111526] border border-[#222A44] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#00F5D4]"
-              />
-            </div>
+              {/* Seating Preference */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 font-mono">
+                  4. Seating Area
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {["Indoor Main Dining", "Patio / Balcony", "Chef's Counter"].map((pref) => (
+                    <button
+                      key={pref}
+                      type="button"
+                      onClick={() => setSeatingPref(pref)}
+                      className={`p-2 rounded-xl text-xs font-medium border text-center transition-all ${
+                        seatingPref === pref
+                          ? "bg-[#00F5D4]/15 border-[#00F5D4] text-[#00F5D4] font-semibold"
+                          : "bg-[#101528] border-[#1F2948] text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {pref}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            {/* Action Bar */}
-            <div className="pt-3 border-t border-[#1C243E] flex items-center justify-between gap-3">
-              <span className="text-xs text-slate-400">
-                No booking fee · Instant confirmation
-              </span>
+              {/* Guest Details */}
+              <div className="space-y-3 pt-2 border-t border-[#192238]">
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Guest Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="e.g. Rahul Sharma"
+                      className="w-full bg-[#101528] border border-[#1F2948] focus:border-[#00F5D4] rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Phone Number (SMS Confirmation)</label>
+                    <input
+                      type="tel"
+                      required
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      className="w-full bg-[#101528] border border-[#1F2948] focus:border-[#00F5D4] rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-slate-400 mb-1">Special Requests (Optional)</label>
+                  <input
+                    type="text"
+                    value={specialRequests}
+                    onChange={(e) => setSpecialRequests(e.target.value)}
+                    placeholder="e.g., Birthday celebration, quiet booth, vegetarian recommendations"
+                    className="w-full bg-[#101528] border border-[#1F2948] focus:border-[#00F5D4] rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Submit CTA */}
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-3 rounded-lg text-xs font-semibold uppercase tracking-wider bg-gradient-to-r from-[#8B5CF6] via-[#3B82F6] to-[#00F5D4] text-[#06070B] hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,245,212,0.3)] flex items-center gap-2"
+                className="w-full py-3.5 rounded-xl text-xs font-semibold uppercase tracking-wider bg-gradient-to-r from-[#8B5CF6] via-[#3B82F6] to-[#00F5D4] text-[#06070B] hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,245,212,0.3)] flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>{isSubmitting ? "Locking Table..." : "Confirm Table Reservation"}</span>
-                <ChevronRight className="w-4 h-4" />
+                <span>{isSubmitting ? "Securing Table..." : `Lock In Table for ${partySize} (${selectedSlot})`}</span>
+                <ChevronRight className="w-4 h-4 stroke-[2.5]" />
               </button>
-            </div>
-          </form>
+            </form>
+          </div>
         )}
       </div>
     </div>

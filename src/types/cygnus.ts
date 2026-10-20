@@ -1,16 +1,33 @@
 export type BusinessCategory =
+  | "agriculture"
+  | "home_services"
   | "restaurant"
   | "product"
   | "salon"
   | "healthcare"
   | "repair"
   | "academy"
-  | "hotel";
+  | "hotel"
+  | "construction"
+  | "automotive"
+  | "professional"
+  | "industrial_b2b";
 
 export type AvailabilityTier =
-  | "verified_live" // Real-time verified booking slot available
-  | "requires_confirmation" // Appointment / table request submitted to provider
+  | "verified_live" // Real-time verified booking slot or inventory available
+  | "requires_confirmation" // Appointment / quote / table request submitted to provider
   | "inquiry_only"; // Call or direct message needed
+
+export type ActionType =
+  | "reserve_table"       // Restaurant
+  | "buy_product"         // Retail products & hardware
+  | "book_appointment"    // Healthcare, Dental, Salon, Wellness
+  | "request_service"     // Plumbers, Electricians, Appliance Repair
+  | "request_quotation"   // Agriculture, Construction, Wholesale B2B
+  | "rent_equipment"      // Tractors, Harvesters, Heavy Machinery
+  | "enroll_course"       // Academies, Tech Institutes
+  | "schedule_site_visit" // Real estate, Commercial Warehouses
+  | "contact_supplier";   // B2B & General enquiries
 
 export interface MenuItem {
   name: string;
@@ -40,11 +57,30 @@ export interface ProductSpec {
   value: string;
 }
 
+export interface EquipmentRentalItem {
+  id: string;
+  name: string;
+  model: string;
+  ratePerHour: number;
+  ratePerDay: number;
+  operatorIncluded: boolean;
+  minHours: number;
+  availableNow: boolean;
+}
+
+export interface DataFreshnessInfo {
+  lastVerifiedAt: string;
+  source: string;
+  isDynamicLive: boolean;
+  refreshIntervalMinutes?: number;
+}
+
 export interface BusinessEntity {
   id: string;
   name: string;
   category: BusinessCategory;
   subcategory: string;
+  actionType: ActionType;
   rating: number;
   reviewCount: number;
   priceRange: "$" | "$$" | "$$$" | "$$$$";
@@ -52,6 +88,7 @@ export interface BusinessEntity {
   currency?: string;
   address: string;
   city: string;
+  state?: string;
   lat: number;
   lng: number;
   distanceKm: number;
@@ -63,7 +100,31 @@ export interface BusinessEntity {
   photos: string[];
   description: string;
   availabilityTier: AvailabilityTier;
-  verifiedProvider?: string; // e.g. "ReserveWithGoogle", "OpenTable Live", "ZocDoc API", "Shopify POS"
+  verifiedProvider?: string;
+
+  // Real-time map & data freshness metadata
+  dataFreshness?: DataFreshnessInfo;
+
+  // Agriculture specific
+  cropSuitability?: string[];
+  productSafetyLabel?: string;
+  equipmentList?: EquipmentRentalItem[];
+  wholesaleMOQ?: string;
+
+  // Home service specific
+  technicianStatus?: "on_duty_available" | "busy_next_at_3pm" | "scheduled_only";
+  serviceAreaRadiusKm?: number;
+  emergencyTurnaroundMinutes?: number;
+
+  // Construction & Industrial specific
+  warehouseSpecs?: {
+    totalAreaSqFt: number;
+    clearHeightMeters: number;
+    powerLoadKva: number;
+    dockDoors: number;
+    coldStorageAvailable: boolean;
+  };
+  bulkPriceTiers?: { minQty: string; pricePerUnit: string }[];
 
   // Restaurant specific
   cuisine?: string[];
@@ -82,7 +143,7 @@ export interface BusinessEntity {
   services?: ServiceItem[];
   staff?: StaffSpecialist[];
   appointmentSlots?: string[];
-  privacyCompliant?: boolean; // for healthcare HIPAA/NABH compliance notice
+  privacyCompliant?: boolean;
 }
 
 export interface BookingRecord {
@@ -91,10 +152,12 @@ export interface BookingRecord {
   businessId: string;
   businessName: string;
   category: BusinessCategory;
+  actionType: ActionType;
   serviceOrTable: string;
   date: string;
   time: string;
   partySize?: number;
+  quantity?: string;
   status: "confirmed" | "pending" | "cancelled" | "completed";
   price: number;
   currency: string;
@@ -102,6 +165,12 @@ export interface BookingRecord {
   notes?: string;
   createdAt: string;
   cancellationPolicy?: string;
+  fulfillmentDetails?: {
+    type?: string;
+    address?: string;
+    urgency?: string;
+    operatorNeeded?: boolean;
+  };
 }
 
 export interface SavedPlaceItem {
@@ -127,4 +196,5 @@ export interface DiscoveryFilterState {
   timeSlot?: string;
   partySize?: number;
   userCoords: { lat: number; lng: number };
+  travelMode: "driving" | "walking" | "transit";
 }
